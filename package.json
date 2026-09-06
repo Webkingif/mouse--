@@ -1,4 +1,15 @@
 {
+	"name": "mouse--",
+	"version": "1.0.0",
+	"bin": {
+		"mouse--": "./bin/mouse.js"
+	},
+	"description": "Control your PC from your phone. A lightweight, offline-capable hybrid remote desktop system",
+	"main": "server.js",
+	"scripts": {
+		"start": "node server.js",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
 	"type": "module",
 	"dependencies": {
 		"express": "^5.2.1",
