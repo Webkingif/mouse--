@@ -1,5 +1,5 @@
 
-
+import os from "os";
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
@@ -9,6 +9,8 @@ import { fileURLToPath } from 'url';
 
 mouse.config.mouseSpeed = 10000;
 mouse.config.autoDelayMs = 0;
+
+
 
 
 
@@ -23,6 +25,20 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/host', (req, res) => res.sendFile(path.join(__dirname, 'public', 'host.html')));
 app.get('/client', (req, res) => res.sendFile(path.join(__dirname, 'public', 'client.html')));
+
+function getLocalIp() {
+    const interfaces = os.networkInterfaces();
+
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            if (iface.family === "IPv4" && !iface.internal) {
+                return iface.address;
+            }
+        }
+    }
+    return "localhost";
+}
+
 
 // Map to track which room (8-digit code) a socket belongs to
 const socketRooms = new Map();
@@ -213,7 +229,8 @@ io.on('connection', (socket) => {
 
 const PORT = 3000;
 server.listen(PORT, '0.0.0.0', () => {
+    const ip = getLocalIp();
     console.log(`Server running.`);
     console.log(`Host: http://localhost:${PORT}/host`);
-    console.log(`Client: http://<YOUR_LAPTOP_IP>:${PORT}/client`);
+    console.log(`Visit http://${ip}:${PORT}/client on your phone to connect`)
 });
