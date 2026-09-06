@@ -1,0 +1,464 @@
+/* =========================================
+   Mouse Design System - v1.0.0
+   ========================================= */
+
+:root {
+    /* Brand & Accents */
+    --color-primary: #00E5FF;
+    --color-local: #FFAB00;
+    --color-success: #00E676;
+    --color-error: #FF3D00;
+
+    /* Backgrounds & Surfaces */
+    --color-bg-base: #090A0F;
+    --color-surface-base: #161822;
+    --color-surface-float: rgba(30, 33, 45, 0.6);
+
+    /* Text & Borders */
+    --color-text-primary: #FFFFFF;
+    --color-text-muted: #8A8D98;
+    --color-border-subtle: rgba(255, 255, 255, 0.08);
+
+    /* Typography */
+    --font-sans: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    /* Motion */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 800ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Base Styles --- */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-bg-base);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    box-sizing: border-box;
+}
+
+/* --- Host (Desktop) Layout --- */
+.host-layout {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.container {
+    background-color: var(--color-surface-base);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 24px;
+    padding: 48px 32px;
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    transition: all var(--transition-base);
+}
+
+h1 {
+    margin: 0 0 8px 0;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+p.subtitle {
+    color: var(--color-text-muted);
+    margin: 0 0 32px 0;
+    font-size: 16px;
+}
+
+/* --- Components --- */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--color-border-subtle);
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin-bottom: 32px;
+}
+
+.mono-text {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-text-muted);
+    letter-spacing: 0.02em;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background-color: var(--color-text-muted);
+    transition: background-color var(--transition-base);
+}
+
+.dot.active-cyan {
+    background-color: var(--color-primary);
+    box-shadow: 0 0 8px var(--color-primary);
+}
+
+button.primary {
+    background-color: var(--color-primary);
+    color: var(--color-bg-base);
+    border: none;
+    padding: 16px 32px;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transition: all var(--transition-fast);
+    width: 100%;
+    max-width: 300px;
+}
+
+button.primary:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+button.primary:active {
+    transform: translateY(1px);
+}
+
+/* --- Video Elements --- */
+.video-wrapper {
+    margin-top: 32px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--color-border-subtle);
+    display: none;
+    transition: box-shadow var(--transition-base);
+}
+
+.video-wrapper.live {
+    display: block;
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+    border-color: rgba(0, 229, 255, 0.3);
+}
+
+.host-video {
+    width: 100%;
+    display: block;
+    background: #000;
+}
+
+/* --- Client (Mobile) Layout --- */
+.client-layout {
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    touch-action: none;
+}
+
+.client-video {
+    position: absolute;
+    /* Pulls video out of flexbox flow */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity var(--transition-slow);
+    z-index: 1;
+    /* Keeps it behind the overlay */
+}
+
+
+.client-video.live {
+    opacity: 1;
+}
+
+.touch-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+}
+
+.startup-msg {
+    position: absolute;
+    color: var(--color-text-primary);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    z-index: 5;
+    opacity: 0.5;
+}
+
+/* Glassmorphic floating toolbar */
+.toolbar {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-surface-float);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--color-border-subtle);
+    padding: 12px 24px;
+    border-radius: 9999px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.status-dot-amber {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--color-local);
+    box-shadow: 0 0 10px var(--color-local);
+    animation: pulse-amber 2s infinite cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes pulse-amber {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 171, 0, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(255, 171, 0, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 171, 0, 0);
+    }
+}
+
+
+.auth-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 320px;
+    z-index: 20;
+}
+
+input.code-input {
+    background-color: var(--color-bg-base);
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-primary);
+    font-family: var(--font-mono);
+    font-size: 24px;
+    text-align: center;
+    padding: 16px;
+    border-radius: 12px;
+    outline: none;
+    transition: border-color var(--transition-fast);
+    letter-spacing: 0.2em;
+}
+
+input.code-input:focus {
+    border-color: var(--color-primary);
+}
+
+.error-text {
+    color: var(--color-error);
+    font-size: 14px;
+    text-align: center;
+    display: none;
+}
+
+
+
+
+
+/* Add to bottom of public/style.css */
+.icon-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-primary);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    padding: 0;
+}
+
+.icon-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
+.icon-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+
+
+
+
+
+
+/* --- Floating UI Controls --- */
+.action-btn {
+    background: rgba(30, 33, 45, 0.7);
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-primary);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    transition: background var(--transition-fast);
+    z-index: 30;
+    padding: 0;
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 16px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.action-btn:active {
+    background: var(--color-primary);
+    color: var(--color-bg-base);
+}
+
+.action-btn svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
+.fullscreen-top-right {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    display: none;
+    /* Hidden until connected */
+}
+
+.side-controls {
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 30;
+    display: none;
+    /* Hidden until connected */
+}
+
+
+
+.action-btn.active-lock {
+    background: var(--color-primary);
+    color: var(--color-bg-base);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+    transform: scale(1.05);
+}
+
+
+
+.scroll-controls {
+    position: absolute;
+    left: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 30;
+    display: none;
+    /* Hidden until connected */
+}
+
+
+
+/* --- Keyboard & Toolbars --- */
+.hidden-input {
+    position: absolute;
+    opacity: 0;
+    top: -1000px;
+    left: -1000px;
+    pointer-events: none;
+}
+
+.top-left-controls {
+    position: absolute;
+    top: 24px;
+    left: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 30;
+    display: none;
+    /* Hidden until connected */
+}
+
+/* --- D-Pad (Arrow Keys) --- */
+.d-pad-container {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: grid;
+    grid-template-columns: repeat(3, 48px);
+    grid-template-rows: repeat(2, 48px);
+    gap: 8px;
+    z-index: 30;
+    display: none;
+    /* Hidden by default */
+}
+
+.d-pad-container .btn-up {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.d-pad-container .btn-left {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.d-pad-container .btn-down {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.d-pad-container .btn-right {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+/* Keep SVG icons sized properly in action buttons */
+.action-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}

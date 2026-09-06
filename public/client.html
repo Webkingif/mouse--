@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mouse | Remote</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="client-layout">
+
+    <!-- Login Panel -->
+    <div class="auth-panel" id="authPanel">
+        <div class="startup-msg" style="position: relative; text-align: center; margin-bottom: 8px; opacity: 1;">ENTER
+            8-DIGIT CODE</div>
+        <input type="number" class="code-input" id="codeInput" placeholder="--------" maxlength="8">
+        <div class="error-text" id="errorText">Invalid code.</div>
+        <button class="primary" id="connectBtn">Connect</button>
+    </div>
+
+
+
+    <!-- Video Stream -->
+    <video class="client-video" id="remoteVideo" autoplay playsinline></video>
+    <div class="touch-overlay" id="overlay" style="display: none;"></div>
+
+
+
+    <!-- Hidden input to force mobile keyboard -->
+    <textarea id="hiddenInput" class="hidden-input" autocapitalize="none" autocomplete="off" autocorrect="off"
+        spellcheck="false"></textarea>
+
+    <!-- Top Left Controls (Keyboard, Paste, Arrows) -->
+
+    <!-- Top Left Controls (Keyboard, Paste, Arrows, Ctrl, Shift) -->
+    <div id="topLeftControls" class="top-left-controls">
+        <button id="keyboardBtn" class="action-btn" title="Toggle Keyboard">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z" />
+            </svg>
+        </button>
+
+        <button id="arrowsToggleBtn" class="action-btn" title="Toggle Arrow Keys">
+            <svg viewBox="0 0 24 24">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+            </svg>
+        </button>
+        <button id="ctrlBtn" class="action-btn" style="font-size: 14px;">Ctrl</button>
+        <button id="shiftBtn" class="action-btn" style="font-size: 14px;">Shft</button>
+        <button id="scrollUpBtn" class="action-btn" title="Scroll Up">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z" />
+            </svg>
+        </button>
+        <button id="scrollDownBtn" class="action-btn" title="Scroll Down">
+            <svg viewBox="0 0 24 24">
+                <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z" />
+            </svg>
+        </button>
+    </div>
+
+
+    <!-- D-Pad Arrow Keys -->
+    <div id="dPadContainer" class="d-pad-container">
+        <button class="action-btn btn-up" onpointerdown="socket.emit('key_press', 'Up')">▲</button>
+        <button class="action-btn btn-left" onpointerdown="socket.emit('key_press', 'Left')">◀</button>
+        <button class="action-btn btn-down" onpointerdown="socket.emit('key_press', 'Down')">▼</button>
+        <button class="action-btn btn-right" onpointerdown="socket.emit('key_press', 'Right')">▶</button>
+    </div>
+    <!-- Top Right Fullscreen Button -->
+    <button id="fullscreenBtn" class="action-btn fullscreen-top-right" title="Fullscreen">
+        <svg viewBox="0 0 24 24">
+            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+        </svg>
+    </button>
+
+    <!-- Right Side Mouse Controls -->
+    <!-- Right Side Mouse Controls -->
+    <div id="sideControls" class="side-controls">
+        <!-- New Drag Mode Button -->
+        <button id="dragBtn" class="action-btn" title="Toggle Drag Mode">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z" />
+            </svg>
+        </button>
+        <button id="leftClickBtn" class="action-btn">L</button>
+        <button id="rightClickBtn" class="action-btn">R</button>
+    </div>
+
+    <!-- Left Side Scroll Controls -->
+
+
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const remoteVideo = document.getElementById('remoteVideo');
+        const overlay = document.getElementById('overlay');
+        const authPanel = document.getElementById('authPanel');
+        const codeInput = document.getElementById('codeInput');
+        const connectBtn = document.getElementById('connectBtn');
+        const errorText = document.getElementById('errorText');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const sideControls = document.getElementById('sideControls');
+        const leftClickBtn = document.getElementById('leftClickBtn');
+        const rightClickBtn = document.getElementById('rightClickBtn');
+
+        // 1. Grab the elements (put this near your other document.getElementById calls)
+        const scrollControls = document.getElementById('scrollControls');
+        const scrollUpBtn = document.getElementById('scrollUpBtn');
+        const scrollDownBtn = document.getElementById('scrollDownBtn');
+
+        const hiddenInput = document.getElementById('hiddenInput');
+        const topLeftControls = document.getElementById('topLeftControls');
+        const keyboardBtn = document.getElementById('keyboardBtn');
+        const arrowsToggleBtn = document.getElementById('arrowsToggleBtn');
+        const dPadContainer = document.getElementById('dPadContainer')
+        const ctrlBtn = document.getElementById('ctrlBtn');
+        const shiftBtn = document.getElementById('shiftBtn');
+
+
+
+        let peerConnection;
+        const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+        // --- FULLSCREEN LOGIC ---
+        function toggleFullscreen() {
+            const elem = document.documentElement;
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                if (elem.requestFullscreen) elem.requestFullscreen().catch(e => { });
+                else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(e => { });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            }
+        }
+        fullscreenBtn.onclick = toggleFullscreen;
+
+        // --- CONNECTION LOGIC ---
+        connectBtn.onclick = () => {
+            const code = codeInput.value.trim();
+            if (code.length === 8) {
+                toggleFullscreen();
+                connectBtn.innerText = 'Connecting...';
+                errorText.style.display = 'none';
+                socket.emit('join_session', code);
+            } else {
+                errorText.innerText = 'Code must be 8 digits.';
+                errorText.style.display = 'block';
+            }
+        };
+
+        socket.on('join_error', (msg) => {
+            errorText.innerText = msg;
+            errorText.style.display = 'block';
+            connectBtn.innerText = 'Connect';
+        });
+
+        socket.on('session_joined', () => {
+            authPanel.style.display = 'none';
+            overlay.style.display = 'block';
+        });
+
+        // --- WEBRTC LOGIC ---
+        socket.on('offer', async (offer) => {
+            peerConnection = new RTCPeerConnection(config);
+
+            peerConnection.ontrack = (event) => {
+                remoteVideo.srcObject = event.streams[0];
+                remoteVideo.classList.add('live');
+                // Reveal the UI overlay controls once the video starts playing
+                fullscreenBtn.style.display = 'flex';
+                sideControls.style.display = 'flex';
+                // scrollControls.style.display = "flex";
+                topLeftControls.style.display = 'flex';
+            };
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) socket.emit('ice-candidate', event.candidate);
+            };
+
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            socket.emit('answer', answer);
+        });
+
+        socket.on('ice-candidate', (candidate) => {
+            if (peerConnection) peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        });
+
+
+
+
+        // Make sure to define the new button at the top of your script variables if you haven't!
+        const dragBtn = document.getElementById('dragBtn');
+
+        // --- TOUCH LOGIC (Coordinates & State) ---
+        let lastEmitTime = 0;
+        const THROTTLE_MS = 16;
+
+        let isDragMode = false;
+        let screenTouchMoved = false;
+
+        // We will now track the absolute cursor position to allow smooth relative dragging
+        let currentXPercent = 0.5;
+        let currentYPercent = 0.5;
+        let lastDragTouchX = 0;
+        let lastDragTouchY = 0;
+
+        function processTouchCoordinate(event) {
+            const rect = remoteVideo.getBoundingClientRect();
+            const videoW = remoteVideo.videoWidth;
+            const videoH = remoteVideo.videoHeight;
+            if (videoW === 0 || videoH === 0) return;
+
+            const scale = Math.min(rect.width / videoW, rect.height / videoH);
+            const renderedWidth = videoW * scale;
+            const renderedHeight = videoH * scale;
+            const offsetX = (rect.width - renderedWidth) / 2;
+            const offsetY = (rect.height - renderedHeight) / 2;
+
+            const touch = event.touches[0] || event.changedTouches[0];
+            const xPercent = ((touch.clientX - rect.left) - offsetX) / renderedWidth;
+            const yPercent = ((touch.clientY - rect.top) - offsetY) / renderedHeight;
+
+            if (xPercent >= 0 && xPercent <= 1 && yPercent >= 0 && yPercent <= 1) {
+                // Save the current location
+                currentXPercent = xPercent;
+                currentYPercent = yPercent;
+                socket.emit('mouse_move', { x: currentXPercent, y: currentYPercent });
+            }
+        }
+
+        // --- OVERLAY CONTROLS (Smart Screen Tracking) ---
+
+        overlay.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            screenTouchMoved = false;
+
+            if (isDragMode) {
+                // TRACKPAD MODE: Record where the finger landed, but DO NOT teleport the cursor
+                const touch = e.touches[0] || e.changedTouches[0];
+                lastDragTouchX = touch.clientX;
+                lastDragTouchY = touch.clientY;
+            } else {
+                // NORMAL MODE: Snap cursor exactly to the finger
+                processTouchCoordinate(e);
+            }
+        }, { passive: false });
+
+        overlay.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            screenTouchMoved = true;
+
+            const now = Date.now();
+            if (now - lastEmitTime < THROTTLE_MS) return;
+            lastEmitTime = now;
+
+            if (isDragMode) {
+                // TRACKPAD MODE: Calculate how far the finger moved (relative dragging)
+                const rect = remoteVideo.getBoundingClientRect();
+                const videoW = remoteVideo.videoWidth;
+                const videoH = remoteVideo.videoHeight;
+                if (videoW === 0 || videoH === 0) return;
+
+                const scale = Math.min(rect.width / videoW, rect.height / videoH);
+                const renderedWidth = videoW * scale;
+                const renderedHeight = videoH * scale;
+
+                const touch = e.touches[0] || e.changedTouches[0];
+                const deltaX = touch.clientX - lastDragTouchX;
+                const deltaY = touch.clientY - lastDragTouchY;
+
+                // Convert raw pixel delta to percentage delta
+                currentXPercent += (deltaX / renderedWidth);
+                currentYPercent += (deltaY / renderedHeight);
+
+                // Clamp to keep it on screen bounds
+                currentXPercent = Math.max(0, Math.min(1, currentXPercent));
+                currentYPercent = Math.max(0, Math.min(1, currentYPercent));
+
+                // Save for the next frame
+                lastDragTouchX = touch.clientX;
+                lastDragTouchY = touch.clientY;
+
+                // Move the mouse smoothly from its current held position
+                socket.emit('mouse_move', { x: currentXPercent, y: currentYPercent });
+            } else {
+                // NORMAL MODE
+                processTouchCoordinate(e);
+            }
+        }, { passive: false });
+
+        overlay.addEventListener('touchend', (e) => {
+            e.preventDefault();
+
+            // If they tapped the screen without dragging, and Drag Mode is OFF, standard click
+            if (!screenTouchMoved && !isDragMode) {
+                socket.emit('mouse_left_click');
+            }
+        }, { passive: false });
+
+        // --- EXPLICIT UI BUTTONS ---
+
+        // 1. The New Drag Toggle Button
+        dragBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); e.stopPropagation();
+
+            isDragMode = !isDragMode; // Toggle the state
+
+            if (isDragMode) {
+                dragBtn.classList.add('active-lock'); // Turns button Cyan
+                socket.emit('mouse_down');
+            } else {
+                dragBtn.classList.remove('active-lock'); // Returns to normal
+                socket.emit('mouse_up');
+            }
+        });
+
+        // 2. Instant Left Click
+        leftClickBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            socket.emit('mouse_left_click');
+        });
+
+        // 3. Instant Right Click (with failsafe)
+        rightClickBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); e.stopPropagation();
+
+            // Failsafe: drop item before right clicking
+            if (isDragMode) {
+                isDragMode = false;
+                dragBtn.classList.remove('active-lock');
+                socket.emit('mouse_up');
+            }
+
+            socket.emit('mouse_right_click');
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // 2. Make sure they become visible when the video starts!
+        // Find your existing socket.on('offer') block and add scrollControls to the visibility list:
+        /*
+            peerConnection.ontrack = (event) => {
+                remoteVideo.srcObject = event.streams[0];
+                remoteVideo.classList.add('live');
+                fullscreenBtn.style.display = 'flex';
+                sideControls.style.display = 'flex';
+                scrollControls.style.display = 'flex'; // <--- ADD THIS LINE
+            };
+        */
+
+        // --- SCROLL LOGIC ---
+        let scrollInterval = null;
+
+        function startScrolling(direction) {
+            // Send an immediate scroll tick
+            socket.emit('mouse_scroll', direction);
+
+            // Continue scrolling every 100ms while the button is held
+            scrollInterval = setInterval(() => {
+                socket.emit('mouse_scroll', direction);
+            }, 100);
+        }
+
+        function stopScrolling() {
+            if (scrollInterval) clearInterval(scrollInterval);
+        }
+
+        // Scroll Up Events
+        scrollUpBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            startScrolling('up');
+        });
+        scrollUpBtn.addEventListener('touchend', (e) => {
+            e.preventDefault(); stopScrolling();
+        });
+        scrollUpBtn.addEventListener('touchcancel', (e) => { // Failsafe if finger slides off
+            e.preventDefault(); stopScrolling();
+        });
+
+        // Scroll Down Events
+        scrollDownBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            startScrolling('down');
+        });
+        scrollDownBtn.addEventListener('touchend', (e) => {
+            e.preventDefault(); stopScrolling();
+        });
+        scrollDownBtn.addEventListener('touchcancel', (e) => {
+            e.preventDefault(); stopScrolling();
+        });
+
+
+        // 1. Toggle Keyboard
+        keyboardBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            hiddenInput.value = " ";
+            hiddenInput.focus();
+        });
+
+        // 2. Capture Keystrokes (Mobile Quirks included)
+        hiddenInput.addEventListener('input', (e) => {
+            if (e.inputType === 'deleteContentBackward') {
+                socket.emit('key_press', 'Backspace');
+            } else if (e.inputType === 'insertLineBreak') {
+                socket.emit('key_press', 'Enter');
+            } else if (e.data) {
+                // e.data contains the character(s) just typed
+                socket.emit('key_type', e.data);
+            }
+
+            // Clear input immediately so mobile autocorrect doesn't get confused
+            hiddenInput.value = ' ';
+        });
+
+        // Dismiss keyboard if user taps the video overlay
+        overlay.addEventListener('touchstart', () => {
+            hiddenInput.blur();
+        });
+
+
+
+        // --- D-PAD TOGGLE LOGIC ---
+        let dPadVisible = false;
+        arrowsToggleBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            dPadVisible = !dPadVisible;
+            if (dPadVisible) {
+                dPadContainer.style.display = 'grid';
+                arrowsToggleBtn.classList.add('active-lock');
+            } else {
+                dPadContainer.style.display = 'none';
+                arrowsToggleBtn.classList.remove('active-lock');
+            }
+        });
+
+
+
+
+
+
+
+        // --- MODIFIER KEYS (Ctrl / Shift) ---
+        let isCtrlActive = false;
+        let isShiftActive = false;
+
+        ctrlBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            isCtrlActive = !isCtrlActive;
+
+            if (isCtrlActive) {
+                ctrlBtn.classList.add('active-lock');
+                socket.emit('ctrl_down');
+            } else {
+                ctrlBtn.classList.remove('active-lock');
+                socket.emit('ctrl_up');
+            }
+        });
+
+        shiftBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            isShiftActive = !isShiftActive;
+
+            if (isShiftActive) {
+                shiftBtn.classList.add('active-lock');
+                socket.emit('shift_down');
+            } else {
+                shiftBtn.classList.remove('active-lock');
+                socket.emit('shift_up');
+            }
+        });
+
+
+
+    </script>
+</body>
+
+</html>

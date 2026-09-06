@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mouse | Broadcaster</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="host-layout">
+    <div class="container">
+        <h1>Host Device</h1>
+        <p class="subtitle" id="instructionText">Awaiting connection initialization.</p>
+
+        <div class="status-badge">
+            <div class="dot" id="statusDot"></div>
+            <span class="mono-text" id="statusText">IDLE_STATE</span>
+        </div>
+
+        <!-- The 8-Digit Code Display -->
+        <h2 id="sessionCodeDisplay" class="mono-text"
+            style="font-size: 40px; color: var(--color-primary); letter-spacing: 8px; margin: 0 0 32px 0; display: none;">
+        </h2>
+
+        <button class="primary" id="startBtn">Initialize Stream</button>
+
+        <div class="video-wrapper" id="videoWrapper">
+            <video class="host-video" id="preview" autoplay muted playsinline></video>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const startBtn = document.getElementById('startBtn');
+        const preview = document.getElementById('preview');
+        const videoWrapper = document.getElementById('videoWrapper');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const sessionCodeDisplay = document.getElementById('sessionCodeDisplay');
+        const instructionText = document.getElementById('instructionText');
+
+        let localStream;
+        let peerConnection;
+        const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+        startBtn.onclick = async () => {
+            try {
+                localStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        frameRate: { ideal: 30 }
+                    }, audio: false
+                });
+                preview.srcObject = localStream;
+
+                startBtn.style.display = 'none';
+                videoWrapper.classList.add('live');
+                statusDot.classList.add('active-cyan');
+                statusText.innerText = 'GENERATING_CODE...';
+
+                // Request secure code from server
+                socket.emit('create_session');
+            } catch (err) {
+                console.error("Error sharing screen:", err);
+            }
+        };
+
+        socket.on('session_created', (code) => {
+            sessionCodeDisplay.innerText = code;
+            sessionCodeDisplay.style.display = 'block';
+            statusText.innerText = 'AWAITING_CLIENT';
+            instructionText.innerText = 'Enter this code on your mobile device.';
+        });
+
+        // ONLY initiate WebRTC once the client successfully joins the secure room
+        socket.on('client_joined', () => {
+            statusText.innerText = 'P2P_LINK_ESTABLISHED';
+            statusText.style.color = 'var(--color-primary)';
+            startWebRTC();
+        });
+
+        function startWebRTC() {
+            peerConnection = new RTCPeerConnection(config);
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) socket.emit('ice-candidate', event.candidate);
+            };
+
+            peerConnection.createOffer()
+                .then(offer => peerConnection.setLocalDescription(offer))
+                .then(() => socket.emit('offer', peerConnection.localDescription));
+        }
+
+        socket.on('answer', (answer) => {
+            peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+        });
+
+        socket.on('ice-candidate', (candidate) => {
+            peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        });
+    </script>
+</body>
+
+</html>
