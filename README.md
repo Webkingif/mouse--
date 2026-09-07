@@ -4,7 +4,7 @@
 
 Built with Express, Socket.io, WebRTC, and `nut.js`, **mouse--** provides absolute mouse tracking, OS-level keyboard shortcuts (Ctrl/Shift), and two‑way text transfer without needing a native mobile app.
 
-![Hero Image: Split screen showing the PC terminal on the left and the Mobile UI on the right](docs/hero.png)
+![Hero Image: Split screen showing the PC terminal on the left and the Mobile UI on the right](screenshots/3.jpg)
 
 ---
 
