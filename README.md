@@ -155,7 +155,7 @@ A red notification dot appears on the menu button when a new message arrives.
 ---
 Screenshots
 
-![screenshot 1](https://github.com/Webkingif/mouse--/blob/main/screenshots/1.jpg)
+![screenshot 1](https://github.com/Webkingif/mouse--/blob/main/screenshots/1.png)
 ![screenshot 2](https://github.com/Webkingif/mouse--/blob/main/screenshots/2.jpg)
 ---
 
