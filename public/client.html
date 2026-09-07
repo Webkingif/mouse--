@@ -144,7 +144,7 @@
         const leftClickBtn = document.getElementById('leftClickBtn');
         const rightClickBtn = document.getElementById('rightClickBtn');
 
-        // 1. Grab the elements (put this near your other document.getElementById calls)
+        // Grab the elements (put this near your other document.getElementById calls)
         const scrollControls = document.getElementById('scrollControls');
         const scrollUpBtn = document.getElementById('scrollUpBtn');
         const scrollDownBtn = document.getElementById('scrollDownBtn');
@@ -342,7 +342,7 @@
 
         // --- EXPLICIT UI BUTTONS ---
 
-        // 1. The New Drag Toggle Button
+        //  The New Drag Toggle Button
         dragBtn.addEventListener('touchstart', (e) => {
             e.preventDefault(); e.stopPropagation();
 
@@ -357,13 +357,13 @@
             }
         });
 
-        // 2. Instant Left Click
+        // Instant Left Click
         leftClickBtn.addEventListener('touchstart', (e) => {
             e.preventDefault(); e.stopPropagation();
             socket.emit('mouse_left_click');
         });
 
-        // 3. Instant Right Click (with failsafe)
+        // Instant Right Click (with failsafe)
         rightClickBtn.addEventListener('touchstart', (e) => {
             e.preventDefault(); e.stopPropagation();
 
@@ -381,23 +381,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        // 2. Make sure they become visible when the video starts!
-        // Find your existing socket.on('offer') block and add scrollControls to the visibility list:
         /*
             peerConnection.ontrack = (event) => {
                 remoteVideo.srcObject = event.streams[0];
@@ -450,14 +433,14 @@
         });
 
 
-        // 1. Toggle Keyboard
+        // Toggle Keyboard
         keyboardBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             hiddenInput.value = " ";
             hiddenInput.focus();
         });
 
-        // 2. Capture Keystrokes (Mobile Quirks included)
+        //  Capture Keystrokes (Mobile Quirks included)
         hiddenInput.addEventListener('input', (e) => {
             if (e.inputType === 'deleteContentBackward') {
                 socket.emit('key_press', 'Backspace');
