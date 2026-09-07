@@ -151,6 +151,12 @@ A red notification dot appears on the menu button when a new message arrives.
 · Gamepad / controller emulation
 · Audio forwarding (listen to PC audio on phone)
 
+
+---
+Screenshots
+
+![screenshot 1](https://github.com/Webkingif/mouse--/blob/main/screenshots/1.jpg)
+![screenshot 2](https://github.com/Webkingif/mouse--/blob/main/screenshots/2.jpg)
 ---
 
 🤝 Contributing
