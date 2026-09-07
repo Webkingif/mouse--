@@ -157,6 +157,11 @@ Screenshots
 
 ![screenshot 1](https://github.com/Webkingif/mouse--/blob/main/screenshots/1.png)
 ![screenshot 2](https://github.com/Webkingif/mouse--/blob/main/screenshots/2.jpg)
+
+Demo Video
+
+https://youtu.be/66pGH0nawFI?si=yhcYh3u3FzCs06IA
+
 ---
 
 🤝 Contributing
