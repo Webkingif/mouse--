@@ -32,7 +32,6 @@
     <textarea id="hiddenInput" class="hidden-input" autocapitalize="none" autocomplete="off" autocorrect="off"
         spellcheck="false"></textarea>
 
-    <!-- Top Left Controls (Keyboard, Paste, Arrows) -->
 
     <!-- Top Left Controls (Keyboard, Paste, Arrows, Ctrl, Shift) -->
     <div id="topLeftControls" class="top-left-controls">
@@ -77,9 +76,17 @@
         </svg>
     </button>
 
-    <!-- Right Side Mouse Controls -->
+
     <!-- Right Side Mouse Controls -->
     <div id="sideControls" class="side-controls">
+
+        <button id="menuBtn" class="action-btn" title="Menu" style="position: relative;">
+            <div id="notificationDot" class="notification-dot"></div>
+            <svg viewBox="0 0 24 24">
+                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+            </svg>
+        </button>
+
         <!-- New Drag Mode Button -->
         <button id="dragBtn" class="action-btn" title="Toggle Drag Mode">
             <svg viewBox="0 0 24 24">
@@ -91,7 +98,18 @@
         <button id="rightClickBtn" class="action-btn">R</button>
     </div>
 
-    <!-- Left Side Scroll Controls -->
+
+    <!-- Scalable Menu Drawer -->
+    <div id="menuDrawer" class="menu-drawer">
+        <button id="menuTextTransferBtn" class="menu-item">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z" />
+            </svg>
+            Text Transfer
+        </button>
+        <!-- Additional menu items will be added here easily later -->
+    </div>
 
 
 
@@ -493,6 +511,79 @@
                 socket.emit('shift_up');
             }
         });
+        const menuBtn = document.getElementById('menuBtn');
+        const menuDrawer = document.getElementById('menuDrawer');
+        const menuTextTransferBtn = document.getElementById('menuTextTransferBtn');
+        const notificationDot = document.getElementById('notificationDot');
+
+
+        // --- MENU & TEXT TRANSFER LOGIC ---
+        const textModal = document.getElementById('textModal');
+        const closeTextModal = document.getElementById('closeTextModal');
+        const clientReceiveBox = document.getElementById('clientReceiveBox');
+        const clientCopyBtn = document.getElementById('clientCopyBtn');
+        const clientSendBox = document.getElementById('clientSendBox');
+        const clientSendBtn = document.getElementById('clientSendBtn');
+
+        // Toggle Menu Drawer
+        menuBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            // Close modal if open, toggle menu
+            textModal.style.display = 'none';
+            menuDrawer.style.display = menuDrawer.style.display === 'flex' ? 'none' : 'flex';
+        });
+
+        // Open Text Transfer from Menu
+        menuTextTransferBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            menuDrawer.style.display = 'none';
+            textModal.style.display = 'flex';
+            notificationDot.style.display = 'none'; // Clear notification when opened
+        });
+
+        // Close Text Modal
+        closeTextModal.addEventListener('touchstart', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            textModal.style.display = 'none';
+        });
+
+        // Dismiss menu/modal if user taps the main video overlay
+        overlay.addEventListener('touchstart', () => {
+            menuDrawer.style.display = 'none';
+            textModal.style.display = 'none';
+        });
+
+        // Receive text from host
+        socket.on('receive_text', (text) => {
+            clientReceiveBox.value = text;
+            // Show notification dot on the menu button if menu and modal are both closed
+            if (menuDrawer.style.display !== 'flex' && textModal.style.display !== 'flex') {
+                notificationDot.style.display = 'block';
+            }
+        });
+
+        // Copy text on phone
+        clientCopyBtn.addEventListener('touchstart', async (e) => {
+            e.preventDefault();
+            try {
+                await navigator.clipboard.writeText(clientReceiveBox.value);
+                clientCopyBtn.innerText = 'Copied!';
+                setTimeout(() => clientCopyBtn.innerText = 'Copy', 2000);
+            } catch (err) {
+                console.error('Failed to copy', err);
+            }
+        });
+
+        // Send text to host
+        clientSendBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const text = clientSendBox.value.trim();
+            if (text) {
+                socket.emit('send_text', text);
+                clientSendBox.value = '';
+            }
+        });
+
 
 
 

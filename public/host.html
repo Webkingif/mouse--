@@ -31,6 +31,25 @@
         <div class="video-wrapper" id="videoWrapper">
             <video class="host-video" id="preview" autoplay muted playsinline></video>
         </div>
+
+        <div class="text-transfer-panel"
+            style="margin-top: 24px; padding: 16px; border: 1px solid #ccc; max-width: 400px;">
+            <h3>Shared Text</h3>
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 4px;">From Phone:</label>
+                <textarea id="hostReceiveBox" readonly rows="3"
+                    style="width: 100%; box-sizing: border-box; margin-bottom: 8px;"></textarea>
+                <button id="hostCopyBtn">Copy</button>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 4px;">Send to Phone:</label>
+                <textarea id="hostSendBox" rows="3"
+                    style="width: 100%; box-sizing: border-box; margin-bottom: 8px;"></textarea>
+                <button id="hostSendBtn">Send</button>
+            </div>
+        </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -43,6 +62,12 @@
         const statusText = document.getElementById('statusText');
         const sessionCodeDisplay = document.getElementById('sessionCodeDisplay');
         const instructionText = document.getElementById('instructionText');
+
+        const hostReceiveBox = document.getElementById('hostReceiveBox');
+        const hostCopyBtn = document.getElementById('hostCopyBtn');
+        const hostSendBox = document.getElementById('hostSendBox');
+        const hostSendBtn = document.getElementById('hostSendBtn');
+
 
         let localStream;
         let peerConnection;
@@ -106,6 +131,34 @@
         socket.on('ice-candidate', (candidate) => {
             peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
         });
+
+
+
+
+
+
+        // Receive text from phone
+        socket.on('receive_text', (text) => {
+            hostReceiveBox.value = text;
+        });
+
+        // Copy received text to PC clipboard
+        hostCopyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(hostReceiveBox.value).then(() => {
+                hostCopyBtn.innerText = 'Copied!';
+                setTimeout(() => hostCopyBtn.innerText = 'Copy', 2000);
+            });
+        });
+
+        // Send text to phone
+        hostSendBtn.addEventListener('click', () => {
+            const text = hostSendBox.value.trim();
+            if (text) {
+                socket.emit('send_text', text);
+                hostSendBox.value = ''; // Clear box after sending
+            }
+        });
+
     </script>
 </body>
 

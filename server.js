@@ -224,6 +224,14 @@ io.on('connection', (socket) => {
         }
     });
 
+    // --- Text Transfer Relay ---
+    socket.on('send_text', (text) => {
+        const room = socketRooms.get(socket.id);
+        if (!room) return;
+        // Broadcasts the text to the OTHER device in the room
+        socket.to(room).emit('receive_text', text);
+    });
+
 
 });
 
